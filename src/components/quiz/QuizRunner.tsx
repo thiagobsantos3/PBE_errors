@@ -258,11 +258,13 @@ export function QuizRunner({
       allResults: newResults
     });
     
-    saveSessionState({
-      results: newResults,
-    });
-    
-    nextQuestion();
+    const isLastQuestion = session.current_question_index >= session.questions.length - 1;
+    if (isLastQuestion) {
+      await completeQuiz(newResults);
+    } else {
+      saveSessionState({ results: newResults });
+      nextQuestion();
+    }
   };
 
   const handleIncorrect = async () => {
@@ -311,8 +313,13 @@ export function QuizRunner({
         allResults: newResults
       });
       
-      saveSessionState({ results: newResults });
-      nextQuestion();
+      const isLastQuestion = session.current_question_index >= session.questions.length - 1;
+      if (isLastQuestion) {
+        await completeQuiz(newResults);
+      } else {
+        saveSessionState({ results: newResults });
+        nextQuestion();
+      }
     }
   };
 
@@ -361,13 +368,15 @@ export function QuizRunner({
       allResults: newResults
     });
     
-    saveSessionState({
-      results: newResults
-    });
-    
-    setShowPartialModal(false);
-    setPartialPoints(0);
-    nextQuestion();
+    const isLastQuestion = session.current_question_index >= session.questions.length - 1;
+    if (isLastQuestion) {
+      await completeQuiz(newResults);
+    } else {
+      saveSessionState({ results: newResults });
+      setShowPartialModal(false);
+      setPartialPoints(0);
+      nextQuestion();
+    }
   };
 
   const nextQuestion = () => {
@@ -392,26 +401,33 @@ export function QuizRunner({
         timer_started: false
       });
     } else {
-      // Calculate final total points before marking as completed
-      const finalResults = session.results;
-      const finalTotalPoints = finalResults.reduce((sum, result) => sum + (Number(result.pointsEarned) || 0), 0);
-      
-      developerLog('🏁 QuizRunner: Quiz completion - final calculations:', {
-        finalResultsLength: finalResults.length,
-        finalResults: finalResults,
-        finalTotalPoints: finalTotalPoints,
-        sessionTotalPoints: session.total_points
-      });
-      
-      setQuizCompleted(true);
-      stopTimer();
-      saveSessionState({
-        status: 'completed',
-        completed_at: new Date().toISOString(),
-        timer_active: false,
-        total_points: finalTotalPoints // Ensure total_points is accurate
-      });
+      // If we somehow reach here without passing results, fall back to session state
+      completeQuiz(session.results);
     }
+  };
+
+  // Ensure completion uses the latest results and persists a single, accurate update
+  const completeQuiz = async (finalResults: QuizResult[]) => {
+    if (!session || !quizSessionId) return;
+    const finalTotalPoints = finalResults.reduce((sum, r) => sum + (Number(r.pointsEarned) || 0), 0);
+
+    developerLog('🏁 QuizRunner: Quiz completion - final calculations:', {
+      finalResultsLength: finalResults.length,
+      finalResults,
+      finalTotalPoints,
+      sessionTotalPoints: session.total_points
+    });
+
+    setQuizCompleted(true);
+    stopTimer();
+    // Perform a single authoritative update including results and completion
+    await updateQuizSession(quizSessionId, {
+      results: finalResults,
+      status: 'completed',
+      completed_at: new Date().toISOString(),
+      timer_active: false,
+      total_points: finalTotalPoints,
+    });
   };
 
   const calculateStats = () => {
