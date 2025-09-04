@@ -512,11 +512,9 @@ export function QuizRunner({
     );
   }
 
-  const currentQuestion = session.questions[session.current_question_index];
   const currentStats = calculateStats();
-  const progressPercentage = session.results.length > 0 ? Math.round((currentStats.correctAnswers / session.results.length) * 100) : 0;
 
-  // Completion screen
+  // Completion screen first to avoid computing currentQuestion when not needed
   if (quizCompleted) {
     return (
       <Layout hideHeaderAndSidebar={isFullScreen}>
@@ -533,6 +531,9 @@ export function QuizRunner({
       </Layout>
     );
   }
+
+  const currentQuestion = session.questions?.[session.current_question_index];
+  const progressPercentage = session.results.length > 0 ? Math.round((currentStats.correctAnswers / session.results.length) * 100) : 0;
 
   // Quiz in progress
   return (
