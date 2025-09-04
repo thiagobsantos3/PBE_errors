@@ -24,6 +24,8 @@ import { Question } from '../../types';
 
 export function QuestionManagement() {
   const { questions, loading, fetchQuestions, createQuestion, updateQuestion, deleteQuestion } = useQuestion();
+  const [page, setPage] = useState(1);
+  const pageSize = 25;
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedBook, setSelectedBook] = useState<string>('all');
   const [selectedTier, setSelectedTier] = useState<string>('all');
@@ -54,6 +56,11 @@ export function QuestionManagement() {
     
     return matchesSearch && matchesBook && matchesTier;
   });
+
+  // Paginate filtered results
+  const totalPages = Math.max(1, Math.ceil(filteredQuestions.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const pagedQuestions = filteredQuestions.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   // Get unique books from questions
   const availableBooks = Array.from(new Set(questions.map(q => q.book_of_bible))).sort();
@@ -317,7 +324,7 @@ export function QuestionManagement() {
         {/* Questions Table */}
         <Table
           columns={columns}
-          data={filteredQuestions}
+          data={pagedQuestions}
           loading={loading}
           emptyState={{
             icon: BookOpen,
@@ -325,6 +332,30 @@ export function QuestionManagement() {
             description: "No questions found matching your criteria"
           }}
         />
+
+        {/* Pagination Controls */}
+        <div className="mt-4 flex items-center justify-between">
+          <div className="text-sm text-gray-600">
+            Showing {(currentPage - 1) * pageSize + 1}-{Math.min(currentPage * pageSize, filteredQuestions.length)} of {filteredQuestions.length}
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <span className="text-sm text-gray-700">Page {currentPage} of {totalPages}</span>
+            <button
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
 
         {/* Question Modal */}
         <Modal
