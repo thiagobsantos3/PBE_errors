@@ -53,6 +53,14 @@ export function QuizRunner({
   const [showPartialModal, setShowPartialModal] = useState(false);
   const [isFullScreen, setIsFullScreen] = useState(false);
   const [showModeInfo, setShowModeInfo] = useState(false);
+  const [completionStats, setCompletionStats] = useState<{
+    totalPointsEarned: number;
+    totalPossiblePoints: number;
+    accuracy: number;
+    correctAnswers: number;
+    totalQuestions: number;
+    averageTime: number;
+  } | null>(null);
 
   // Custom hooks
   const { isDarkMode, themeClasses, toggleDarkMode } = useQuizTheme(isFullScreen);
@@ -411,6 +419,20 @@ export function QuizRunner({
     if (!session || !quizSessionId) return;
     const finalTotalPoints = finalResults.reduce((sum, r) => sum + (Number(r.pointsEarned) || 0), 0);
 
+    // Compute a stable snapshot of stats for the confirmation screen to avoid flicker
+    const totalPossiblePoints = finalResults.reduce((sum, r) => sum + (Number(r.totalPoints) || 0), 0);
+    const correctAnswers = finalResults.filter(r => (r.pointsEarned || 0) === (r.totalPoints || 0)).length;
+    const accuracy = finalResults.length > 0 ? Math.round((correctAnswers / finalResults.length) * 100) : 0;
+    const averageTime = finalResults.length > 0 ? Math.round(finalResults.reduce((sum, r) => sum + (r.timeSpent || 0), 0) / finalResults.length) : 0;
+    setCompletionStats({
+      totalPointsEarned: finalTotalPoints,
+      totalPossiblePoints,
+      accuracy,
+      correctAnswers,
+      totalQuestions: finalResults.length,
+      averageTime,
+    });
+
     developerLog('🏁 QuizRunner: Quiz completion - final calculations:', {
       finalResultsLength: finalResults.length,
       finalResults,
@@ -522,7 +544,7 @@ export function QuizRunner({
       <Layout hideHeaderAndSidebar={isFullScreen}>
         <QuizCompletion
           title={session.title}
-          stats={currentStats}
+          stats={completionStats || currentStats}
           bonusXp={session.bonus_xp || 0}
           isFullScreen={isFullScreen}
           themeClasses={themeClasses}
