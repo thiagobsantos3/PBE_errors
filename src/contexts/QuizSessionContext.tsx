@@ -480,11 +480,17 @@ export function QuizSessionProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // Update server-side user stats and check achievements
+        // Update server-side user stats via triggers; do a non-blocking refresh
         try {
-          // Recompute on server to ensure consistency with leaderboard
-          await supabase.rpc('recompute_user_stats', { p_user_id: user.id });
-          await refreshUser();
+          // Defer refresh slightly and never throw here to avoid breaking confirmation view
+          setTimeout(async () => {
+            try {
+              await refreshUser();
+              developerLog('✅ Post-completion: user stats refreshed');
+            } catch (e) {
+              developerLog('⚠️ Post-completion: user stats refresh failed (non-blocking):', e);
+            }
+          }, 400);
           await checkAchievements();
           
         } catch (error) {
