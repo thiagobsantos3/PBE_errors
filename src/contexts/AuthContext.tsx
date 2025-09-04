@@ -161,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       developerLog('📝 fetchPlanSettingsForPlan: Fetching plan settings for plan:', planId);
       const { data: settings, error: settingsError } = await supabase
         .from('plan_settings')
-        .select('plan_id, max_team_members, features')
+        .select('plan_id, max_team_members, max_questions_custom_quiz, question_tier_access, allow_quick_start_quiz, allow_create_own_quiz, allow_study_schedule_quiz, allow_analytics_access')
         .eq('plan_id', planId)
         .maybeSingle();
 
