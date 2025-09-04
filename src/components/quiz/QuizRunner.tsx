@@ -440,18 +440,20 @@ export function QuizRunner({
       averageTime: 0,
     };
 
-    const totalPointsEarned = session.results.reduce((sum, result) => sum + result.pointsEarned, 0);
-    const totalPossiblePoints = session.results.reduce((sum, result) => sum + result.totalPoints, 0);
-    const correctAnswers = session.results.filter(result => result.pointsEarned === result.totalPoints).length;
-    const accuracy = session.results.length > 0 ? Math.round((correctAnswers / session.results.length) * 100) : 0;
-    const averageTime = session.results.length > 0 ? Math.round(session.results.reduce((sum, result) => sum + result.timeSpent, 0) / session.results.length) : 0;
+    const results = Array.isArray(session.results) ? session.results : [];
+
+    const totalPointsEarned = results.reduce((sum, result) => sum + (result?.pointsEarned || 0), 0);
+    const totalPossiblePoints = results.reduce((sum, result) => sum + (result?.totalPoints || 0), 0);
+    const correctAnswers = results.filter(result => (result?.pointsEarned || 0) === (result?.totalPoints || 0)).length;
+    const accuracy = results.length > 0 ? Math.round((correctAnswers / results.length) * 100) : 0;
+    const averageTime = results.length > 0 ? Math.round(results.reduce((sum, result) => sum + (result?.timeSpent || 0), 0) / results.length) : 0;
 
     return {
       totalPointsEarned,
       totalPossiblePoints,
       accuracy,
       correctAnswers,
-      totalQuestions: session.results.length,
+      totalQuestions: results.length,
       averageTime,
     };
   };
