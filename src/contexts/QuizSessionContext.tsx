@@ -480,13 +480,11 @@ export function QuizSessionProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        // Update user stats and check achievements
+        // Update server-side user stats and check achievements
         try {
-          const pointsEarned = calculateTotalPointsFromResults(
-            finalUpdates.results || currentSession.results || []
-          );
-          
-          await updateUserStats(pointsEarned, bonusXp);
+          // Recompute on server to ensure consistency with leaderboard
+          await supabase.rpc('recompute_user_stats', { p_user_id: user.id });
+          await refreshUser();
           await checkAchievements();
           
         } catch (error) {
