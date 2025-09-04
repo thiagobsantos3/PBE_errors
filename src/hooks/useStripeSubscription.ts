@@ -73,7 +73,7 @@ export function useStripeSubscription() {
       // Fetch subscription data using the view
       const { data: subData, error: subError } = await supabase
         .from('stripe_user_subscriptions')
-        .select('*')
+        .select('customer_id, subscription_id, subscription_status, price_id, current_period_start, current_period_end, cancel_at_period_end, payment_method_brand, payment_method_last4')
         .maybeSingle();
 
       developerLog('🔍 Raw stripe_user_subscriptions data:', subData);
@@ -99,9 +99,9 @@ export function useStripeSubscription() {
       // Fetch orders data
       const { data: ordersData, error: ordersError } = await supabase
         .from('stripe_user_orders')
-        .select('*')
+        .select('customer_id, order_id, checkout_session_id, payment_intent_id, amount_total, currency, payment_status, order_status, order_date')
         .order('order_date', { ascending: false })
-        .limit(10);
+        .limit(5);
 
       if (ordersError) {
         console.error('❌ Error fetching orders:', ordersError);
@@ -115,7 +115,7 @@ export function useStripeSubscription() {
       // Also check the main subscriptions table for verification
       const { data: mainSubData, error: mainSubError } = await supabase
         .from('subscriptions')
-        .select('*')
+        .select('plan, status, created_at')
         .eq('user_id', user.id)
         .maybeSingle();
 

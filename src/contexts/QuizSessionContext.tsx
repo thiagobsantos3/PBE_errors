@@ -65,9 +65,10 @@ export function QuizSessionProvider({ children }: { children: ReactNode }) {
     try {
       const { data, error } = await supabase
         .from('quiz_sessions')
-        .select('*')
+        .select('id, title, type, status, total_points, max_points, total_actual_time_spent_seconds, completed_at, created_at')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false })
+        .limit(50);
 
       if (error) throw error;
 

@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       developerLog('📝 fetchUserSubscription: Attempting to fetch subscription for user:', userId);
       const { data: subscription, error: subscriptionError } = await supabase
         .from('subscriptions')
-        .select('*')
+        .select('id, user_id, plan, status, current_period_end, cancel_at_period_end, cancelled_at, created_at')
         .eq('user_id', userId)
         .eq('status', 'active')
         .order('created_at', { ascending: false })
@@ -161,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       developerLog('📝 fetchPlanSettingsForPlan: Fetching plan settings for plan:', planId);
       const { data: settings, error: settingsError } = await supabase
         .from('plan_settings')
-        .select('*')
+        .select('plan_id, max_team_members, features')
         .eq('plan_id', planId)
         .maybeSingle();
 

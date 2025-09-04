@@ -81,9 +81,10 @@ export function useStudyAssignments() {
       
       const { data: assignmentsData, error: assignmentsError } = await supabase
         .from('study_assignments')
-        .select('*')
+        .select('id, team_id, user_id, date, study_items, description, completed, completed_at, created_at')
         .eq('team_id', user.teamId)
-        .order('date', { ascending: true });
+        .order('date', { ascending: true })
+        .limit(100);
 
       if (assignmentsError) {
         console.error('❌ Error loading assignments:', assignmentsError);
@@ -113,7 +114,7 @@ export function useStudyAssignments() {
             
             const { data: quizSession, error: sessionError } = await supabase
               .from('quiz_sessions')
-              .select('id, total_points, max_points, questions, total_actual_time_spent_seconds')
+              .select('id, total_points, max_points, total_actual_time_spent_seconds, completed_at, questions')
               .eq('assignment_id', assignment.id)
               .eq('status', 'completed')
               .order('completed_at', { ascending: false })
