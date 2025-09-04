@@ -22,9 +22,8 @@ export function QuestionProvider({ children }: { children: ReactNode }) {
       
       const { data, error } = await supabase
         .from('questions')
-        .select('id, book_of_bible, chapter, question, answer, points, time_to_answer, tier, created_at')
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .select('id, book_of_bible, chapter, verse, question, answer, points, time_to_answer, tier, created_at')
+        .order('created_at', { ascending: false });
 
       if (error) {
         developerLog('❌ Error fetching questions:', error);
